@@ -7,6 +7,7 @@ import * as path from 'path'
 
 const main = async () => {
 	await AppDataSource.initialize()
+	await AppDataSource.runMigrations()
 
 	const schema = await buildSchema({
 		resolvers: [path.join(__dirname, './resolvers/*.*')],
