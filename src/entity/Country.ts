@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from 'type-graphql'
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
+import { Continent } from './Continent'
 
 @Entity()
 @ObjectType()
@@ -20,7 +21,9 @@ export class Country {
 	@Column({ type: 'varchar', unique: true })
 	emoji: string
 
-	@Field(() => String)
-	@Column({ type: 'varchar', default: '' })
-	continent: string
+	@Field(() => Continent)
+	@ManyToOne(() => Continent, (continent) => continent.countries, {
+		onDelete: 'CASCADE',
+	})
+	continent: Continent
 }

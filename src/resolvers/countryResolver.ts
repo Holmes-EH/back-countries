@@ -1,6 +1,7 @@
-import { Arg, Field, Mutation, ObjectType, Query, Resolver } from 'type-graphql'
+import { Arg, Mutation, Query, Resolver } from 'type-graphql'
 import { Country } from '../entity/Country'
 import { AppDataSource } from '../data-source'
+import { Continent } from '../entity/Continent'
 
 @Resolver(Country)
 export class CountryResolver {
@@ -22,7 +23,9 @@ export class CountryResolver {
 	@Query(() => [Country])
 	async getCountries(): Promise<Country[]> {
 		try {
-			const countries = await this.manager.find(Country)
+			const countries = await this.manager.find(Country, {
+				relations: { continent: true },
+			})
 			return countries
 		} catch (error: any) {
 			console.error(error)
@@ -36,7 +39,7 @@ export class CountryResolver {
 	): Promise<Country[]> {
 		try {
 			const countries = await this.manager.find(Country, {
-				where: { continent },
+				where: { continent: { code: continent } },
 			})
 			return countries
 		} catch (error: any) {
@@ -64,7 +67,12 @@ export class CountryResolver {
 			newCountry.code = code
 			newCountry.nom = nom
 			newCountry.emoji = emoji
-			newCountry.continent = continent
+
+			const relatedContinent = await this.manager.findOneByOrFail(
+				Continent,
+				{ code: continent }
+			)
+			newCountry.continent = relatedContinent
 			const savedCountry = await this.manager.save(newCountry)
 			return savedCountry
 		} catch (error: any) {
@@ -93,7 +101,14 @@ export class CountryResolver {
 			existingCountry.code = code || existingCountry.code
 			existingCountry.nom = nom || existingCountry.nom
 			existingCountry.emoji = emoji || existingCountry.emoji
-			existingCountry.continent = continent || existingCountry.continent
+			if (continent) {
+				const relatedContinent = await this.manager.findOneByOrFail(
+					Continent,
+					{ code: continent }
+				)
+				existingCountry.continent = relatedContinent
+			}
+
 			const savedCountry = await this.manager.save(existingCountry)
 			return savedCountry
 		} catch (error: any) {
